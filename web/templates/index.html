@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="container-lg">
+    {% for message in messages %}
+    <div id="toast" role="alert" aria-live="assertive" aria-atomic="true" style="top:10vh;opacity:85%;right:2hw;"
+         class="toast align-items-center text-white bg-danger position-absolute border-0 end-0">
+        <div class="d-flex">
+            <div class="toast-body">
+                {{ message }}
+            </div>
+        </div>
+    </div>
+    <script>
+        setTimeout(function(){
+            $("#toast").fadeOut();
+        }, 3000);
+
+    </script>
+    {% endfor %}
+    <div class="row mt-5">
+        <p>
+            <button type="submit" style="" data-mdb-toggle="modal" data-mdb-target="#add-connection"
+                        class="btn btn-success btn-rounded">
+                    <i class="fas fa-plus me-1"></i>Add connection
+                </button>
+        </p>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-info">
+            <tr>
+                <th scope="col">DB</th>
+                <th scope="col">Connection Name</th>
+                <th scope="col">Host</th>
+                <th scope="col">Schema</th>
+                <th scope="col">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for row in list %}
+            <tr style="cursor: pointer;">
+                <td onclick="connect('{{row.connection_id}}')">
+                    <span style="text-transform: capitalize;">{{ row.dbtype }}</span>
+                </td>
+                <td onclick="connect('{{row.connection_id}}')">
+                    <span>{{ row.connection_name }}</span>
+                </td>
+                <td onclick="connect('{{row.connection_id}}')">
+                    <span>{{ row.host }}</span>
+                </td>
+                <td onclick="connect('{{row.connection_id}}')">
+                    <span>{{ row.schema }}</span>
+                </td>
+                <td>
+                    <button type="button" class="btn btn-danger btn-floating" onclick="removeConnection('{{ row.connection_id }}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="modal fade" id="add-connection" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <form id="connection" action="/" method="POST">
+            {% csrf_token %}
+            <input type="text" hidden id="action1" name="action" value="add">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add New Connection</h5>
+                        <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row mb-3">
+                            <div class="form-outline">
+                              <input type="text" id="dbtype" name="dbtype" class="form-control" value="mysql" readonly/>
+                              <label class="form-label" for="dbtype">Database</label>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="form-outline">
+                              <input type="text" id="name" name="name" class="form-control"/>
+                              <label class="form-label" for="name">Connection name<span class="text-danger">*</span></label>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="form-outline">
+                              <input type="text" id="username" name="username" class="form-control"/>
+                              <label class="form-label" for="username">Username<span class="text-danger">*</span></label>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="form-outline">
+                              <input type="password" id="password" name="password" class="form-control"/>
+                              <label class="form-label" for="password">Password</label>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="form-outline">
+                              <input type="text" id="schema" name="schema" class="form-control"/>
+                              <label class="form-label" for="schema">Schema</label>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="input-group mx-0">
+                                <div class="form-outline me-2">
+                                  <input type="text" id="host" name="host" class="form-control"/>
+                                  <label class="form-label" for="host">Host<span class="text-danger">*</span></label>
+                                </div>
+                                <div class="form-outline">
+                                  <input type="text" id="port" name="port" class="form-control" value="3306"/>
+                                  <label class="form-label" for="port">Port<span class="text-danger">*</span></label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <p> <span id="test-message">Test connection before saving</span>
+                                <button id="test-connection" type="button" style="width: 150px;border-radius: .25rem;" class="btn btn-floating btn-success btn-rounded float-end">
+                                    Test Connection
+                                </button>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-lite" data-mdb-dismiss="modal">Cancel</button>
+                        <button id="save" type="button" class="btn btn-success">Save</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="modal fade" id="confirm" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <form action="/" method="POST">
+            {% csrf_token %}
+            <input type="text" hidden id="conn-id" name="conn-id">
+            <input type="text" hidden id="action" name="action">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Confirmation</h5>
+                        <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">Are you sure, you want to remove this Connection? <br>This process is not reversible.
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-info" data-mdb-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
