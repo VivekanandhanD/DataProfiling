@@ -8,7 +8,13 @@ function connect(id){
 //    }).fail(function(e){
 //        console.error(e);
 //    });
+    $("#loader").modal('show');
     window.location.href = 'tables/' + id;
+}
+
+function columns(name){
+    $("#loader").modal('show');
+    window.location.href = window.location.href + name;
 }
 
 function removeConnection(id){
@@ -30,6 +36,7 @@ $(window).on('load', function(){
     $("#test-connection").on("click", function(){
 //        $("#action1").val("test");
 //        $("#connection").submit();
+        $("#loader").modal('show');
         var action = 'test';
         var dbtype = $("#dbtype").val();
         var username = $("#username").val();
@@ -50,11 +57,14 @@ $(window).on('load', function(){
         }).fail(function(e){
             console.error(e);
             $("#test-message").text(e);
+        }).always(function(e){
+            $("#loader").modal('hide');
         });
     });
     $("#save").on("click", function(){
         var msg = $("#test-message").text();
         if(msg.trim() === 'Success'){
+            $("#loader").modal('show');
             $("#action1").val("add");
             $("#connection").submit();
         }

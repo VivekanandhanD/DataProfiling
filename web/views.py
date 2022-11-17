@@ -1,7 +1,9 @@
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.views import View
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, MetaData
+from sqlalchemy.ext.automap import automap_base
+from sqlalchemy.orm import Session
 
 from web.models import Connections
 
@@ -62,29 +64,69 @@ class ConnectionPage(View):
 class Tables(View):
     template_name = "tables.html"
 
-    def get(self, request, conn_id):
-        # conn_id = request.GET['id']
-        conn = Connections.objects.get(connection_id=conn_id)
-        if len(conn.password):
-            con_string = conn.dbtype + '://' + conn.username + ':' + conn.password + '@' + conn.host + ':' + str(conn.port) + '/' + conn.schema
-        else:
-            con_string = conn.dbtype + '://' + conn.username + '@' + conn.host + ':' + str(conn.port) + '/' + conn.schema
-        print(con_string)
-        engine = create_engine(con_string, echo=True)
-        request.session['conn_id'] = conn_id
-        request.session['con_string'] = con_string
-        return render(request, self.template_name, {'list': engine.table_names()})
+    def get(self, request, conn_id=None):
+        try:
+            con_string = None
+            if not conn_id:
+                con_string = request.session.get('con_string')
+                if not con_string:
+                    return redirect("/")
+            if not con_string:
+                conn = Connections.objects.get(connection_id=conn_id)
+                if len(conn.password):
+                    con_string = conn.dbtype + '://' + conn.username + ':' + conn.password + '@' + conn.host + ':' + str(conn.port) + '/' + conn.schema
+                else:
+                    con_string = conn.dbtype + '://' + conn.username + '@' + conn.host + ':' + str(conn.port) + '/' + conn.schema
+            print(con_string)
+            engine = create_engine(con_string, echo=True)
+            request.session['conn_id'] = conn_id
+            request.session['con_string'] = con_string
+            metadata = MetaData()
+            metadata.reflect(engine)
+            base = automap_base(metadata=metadata)
+            base.prepare()
+            tables_list = []
+            for table_name in engine.table_names():
+                constraints = ''
+                for i in base.classes[table_name].__table__.constraints:
+                    constraints += str(i).split("(")[0] + " : "
+                    for j in i.columns:
+                        constraints += j.name + " | "
+                tables_list.append({
+                    'name': table_name,
+                    'constraints': constraints
+                })
+            return render(request, self.template_name, {'list': tables_list})
+        except Exception as e:
+            print(e)
+            return redirect("/")
 
     def post(self, request):
-        action = request.POST["action"]
-        if action == 'delete':
-            conn_id = request.POST["id"]
-            conn = Connections.objects.filter(connection_id=conn_id).delete()
-        elif action == 'test':
-            dbtype = request.POST["dbtype"]
-            username = request.POST["username"]
-            password = request.POST["password"]
-            host = request.POST["host"]
-            port = request.POST["port"]
-            schema = request.POST["schema"]
+        return redirect("/")
+
+
+class Table(View):
+    template_name = "columns.html"
+
+    def get(self, request, conn_id, table_name):
+        con_string = request.session.get('con_string')
+        if con_string:
+            print(con_string)
+            engine = create_engine(con_string, echo=True)
+            session = Session(engine)
+            metadata = MetaData()
+            metadata.reflect(engine)
+            base = automap_base(metadata=metadata)
+            base.prepare()
+            columns = []
+            row_count = session.query(base.classes[table_name]).count()
+            for column in base.classes[table_name].__table__.columns:
+                name = column.key
+                column_type = str(column.type)
+                columns.append({'name': name, 'type': column_type})
+            return render(request, self.template_name, {'list': columns, 'col': len(columns), 'row': row_count})
+        else:
+            return redirect("/")
+
+    def post(self, request):
         return redirect("/")

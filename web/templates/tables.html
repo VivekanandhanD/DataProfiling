@@ -19,7 +19,7 @@
     </script>
     {% endfor %}
     <div class="row mt-5">
-        <p><a href="javascript:history.back()" title="Go Back" style="color:#880e4f;"><i class="fas fa-arrow-left"></i> Go Back </a></p>
+        <p><a href="/" title="Go Back" style="color:#880e4f;"><i class="fas fa-arrow-left"></i> Go Back </a></p>
         <p><span class="ms-3"> Click any table name for more details.</span></p>
     </div>
     <div class="table-responsive">
@@ -27,14 +27,14 @@
             <thead class="table-info">
             <tr>
                 <th scope="col">Tables</th>
+                <th scope="col">Properties</th>
             </tr>
             </thead>
             <tbody>
             {% for row in list %}
-            <tr style="cursor: pointer;">
-                <td>
-                    <span>{{ row }}</span>
-                </td>
+            <tr style="cursor: pointer;" onclick="columns('{{row.name}}')">
+                <td><span class="fw-bold">{{ row.name }}</span></td>
+                <td><span class="fw-light">{{ row.constraints }}</span></td>
             </tr>
             {% endfor %}
             </tbody>

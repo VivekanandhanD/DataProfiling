@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="container-lg">
+    {% for message in messages %}
+    <div id="toast" role="alert" aria-live="assertive" aria-atomic="true" style="top:10vh;opacity:85%;right:2hw;"
+         class="toast align-items-center text-white bg-danger position-absolute border-0 end-0">
+        <div class="d-flex">
+            <div class="toast-body">
+                {{ message }}
+            </div>
+        </div>
+    </div>
+    <script>
+        setTimeout(function(){
+            $("#toast").fadeOut();
+        }, 3000);
+
+    </script>
+    {% endfor %}
+    <div class="row mt-5">
+        <p><a href="javascript:history.back()" title="Go Back" style="color:#880e4f;"><i class="fas fa-arrow-left"></i> Go Back </a></p>
+<!--        <p><span class="ms-3"> Click any table name for more details.</span></p>-->
+    </div>
+    <div class="row my-4">
+      <div class="col-sm-6">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Row count</h5>
+            <h1 class="card-text">{{row}}</h1>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Column count</h5>
+            <h1 class="card-text">{{col}}</h1>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-info">
+            <tr>
+                <th scope="col">Column Name</th>
+                <th scope="col">Column Type</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for row in list %}
+            <tr style="cursor: pointer;">
+                <td>
+                    <span>{{ row.name }}</span>
+                </td>
+                <td>
+                    <span>{{ row.type }}</span>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
