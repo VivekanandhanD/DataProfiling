@@ -8,3 +8,6 @@ $(window).on('load', function(){
 $(window).ready(function(){
     $("#loader").modal('show');
 });
+setTimeout(function(){
+    $("#loader").modal('hide');
+}, 1000);
